@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebQuest: O Motor de Conhecimento</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- =============================
+     HUD DO JOGADOR (FIXO NO TOPO)
+     Encapsulamento: dados do jogador só expostos via métodos
+============================= -->
+<div class="player-hud" id="playerHud">
+  <div class="hud-avatar" id="hudAvatar">?</div>
+  <div>
+    <div class="hud-name" id="hudName">Jogador</div>
+    <div class="hud-level" id="hudLevel">Nível 1</div>
+  </div>
+  <div>
+    <div class="xp-bar-wrap">
+      <div class="xp-bar-fill" id="hudXpBar" style="width:0%"></div>
+    </div>
+    <div class="hud-xp" id="hudXp">0 XP</div>
+  </div>
+</div>
+
+<!-- MODAL DE LEVEL UP -->
+<div class="modal-overlay" id="levelUpModal">
+  <div class="modal-box">
+    <div class="modal-emoji">🎉</div>
+    <div class="modal-title">LEVEL UP!</div>
+    <div class="modal-sub" id="levelUpText">Você subiu de nível!</div>
+    <button class="btn-primary" onclick="closeLevelUp()">Continuar</button>
+  </div>
+</div>
+
+<!-- =============================
+     TELA 1: SPLASH
+============================= -->
+<section class="screen active" id="screen-splash">
+  <div class="logo-area">
+    <div class="logo-icon">⚡</div>
+    <h1 class="logo-title">Motor de<br>Conhecimento</h1>
+    <p class="logo-sub">WebQuest · Quiz Gamificado</p>
+  </div>
+  <div class="form-card">
+    <p style="font-size:0.85rem; color:var(--text-secondary);">Para começar sua jornada, diga-nos seu nome:</p>
+    <input class="input-field" type="text" id="playerNameInput" placeholder="Seu nome de usuário..." maxlength="20" />
+    <button class="btn-primary" onclick="startGame()">Iniciar Aventura →</button>
+  </div>
+</section>
+
+<!-- =============================
+     TELA 2: SELEÇÃO DE TEMA
+============================= -->
+<section class="screen" id="screen-topic">
+  <div class="greeting-text">
+    <h2 id="greetingTitle">Olá, Jogador!</h2>
+    <p>Escolha um tema para estudar e responder</p>
+  </div>
+  <div class="topic-grid">
+
+    <!-- Classe QuestaoMultiplaEscolha → tema Python -->
+    <div class="topic-card python" onclick="selectTopic('python')">
+      <span class="topic-icon">🐍</span>
+      <div class="topic-name">Python</div>
+      <div class="topic-desc">Histórico, paradigmas, operadores e sintaxe da linguagem Python.</div>
+      <span class="topic-badge">5 questões · MC + V/F</span>
+    </div>
+
+    <!-- Classe QuestaoVerdadeiroFalso → tema PHP -->
+    <div class="topic-card php" onclick="selectTopic('php')">
+      <span class="topic-icon">🐘</span>
+      <div class="topic-name">PHP</div>
+      <div class="topic-desc">Paradigmas, sistemas web, operadores e fundamentos do PHP.</div>
+      <span class="topic-badge">5 questões · MC + V/F</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- =============================
+     TELA 3: RESUMO DO TEMA
+     Fase 3: conteúdo lido de "arquivo" (objeto JSON simulando CSV/TXT)
+============================= -->
+<section class="screen" id="screen-summary">
+  <div>
+    <div class="section-label" id="summaryLabel">tema · resumo</div>
+    <h2 class="summary-title" id="summaryTitle">Python</h2>
+  </div>
+  <div class="summary-card" id="summaryContent"><!-- preenchido via JS --></div>
+  <button class="btn-secondary" onclick="startQuiz()">Ir para as Perguntas →</button>
+</section>
+
+<!-- =============================
+     TELA 4: QUIZ
+     Fase 1 + 2: Classes Questao, lógica de XP, controle de fluxo
+============================= -->
+<section class="screen" id="screen-quiz">
+  <div style="width:100%">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="quiz-meta" style="margin-top:0.4rem;">
+      <span id="questionCounter">Questão 1/5</span>
+      <span id="questionType" class="question-type-badge badge-mc">Múltipla Escolha</span>
+    </div>
+  </div>
+
+  <div class="feedback-box" id="feedbackBox">
+    <span id="feedbackIcon">✓</span>
+    <span id="feedbackText">Correto!</span>
+  </div>
+
+  <p class="question-text" id="questionText">Carregando pergunta...</p>
+
+  <div class="options-grid" id="optionsGrid"><!-- opções geradas via JS --></div>
+
+  <button class="btn-secondary" id="btnNext" onclick="nextQuestion()" style="display:none;">
+    Próxima Questão →
+  </button>
+</section>
+
+<!-- =============================
+     TELA 5: RESULTADO FINAL
+============================= -->
+<section class="screen" id="screen-result">
+  <div class="result-trophy" id="resultTrophy">🏆</div>
+  <h2 class="result-title" id="resultTitle">Quiz Concluído!</h2>
+
+  <div class="result-stats">
+    <div class="stat-card">
+      <div class="stat-value" id="statXP">0</div>
+      <div class="stat-label">XP Total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statCorrect">0</div>
+      <div class="stat-label">Acertos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statFirst">0</div>
+      <div class="stat-label">De Primeira</div>
+    </div>
+  </div>
+
+  <div class="level-badge">
+    <div class="level-badge-label">Nível Atual</div>
+    <div class="level-badge-name" id="resultLevel">Padawan</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-secondary" onclick="goToTopicSelection()">Outro Tema</button>
+    <button class="btn-primary" onclick="retryQuiz()">Tentar Novamente</button>
+  </div>
+</section>
+</body>
+<script src="script.js"></script>
+</html>
